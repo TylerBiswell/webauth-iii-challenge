@@ -36,17 +36,32 @@ router.post('/login', (req, res) => {
           token,
         });
       } else {
-        res.status(401).json({ message: 'Invalid credentials' });
+        res.status(401).json({ message: 'You shall not pass!' });
       }
     })
     .catch(err => {
+      console.log(err);
       res.status(500).json(err);
     });
 });
 
 // GET /api/users endpoint
 router.get('/users', restricted, (req, res) => {
-  res.send('Hello from GET /api/users endpoint');
+  const { username, department } = req.decodedToken;
+
+  if (department === 'management') {
+    Users.find()
+      .then(users => {
+        res.json({ loggedInUser: username, department, users });
+      })
+      .catch(err => res.status(500).send(err));
+  } else {
+    Users.findBy({ department })
+      .then(users => {
+        res.json({ loggedInUser: username, department, users });
+      })
+      .catch(err => res.status(500).send(err));
+  }
 });
 
 function generateToken(user) {
